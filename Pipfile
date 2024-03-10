@@ -4,6 +4,13 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+streamlit = "*"
+pandas = "*"
+google-api-python-client = "*"
+python-decouple = "*"
+pandasai = "*"
+pyyaml = "*"
+wordcloud = "*"
 
 [dev-packages]
 
