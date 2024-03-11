@@ -1,6 +1,10 @@
+# view.py
+from matplotlib import rc
 import streamlit as st
 import os
 import json
+
+rc('font', family='AppleGothic')
 
 class InputView:
 
@@ -11,14 +15,32 @@ class InputView:
     ]
 
     def select_country_sidebar(self):
+        st.sidebar.title("데이터 분석")
+        
         selected_country = st.sidebar.selectbox("국가 선택", self.COUNTRIES)
-        with open(os.path.join("../data", "country_code.json"), "r") as f:
+        with open(os.path.abspath("../data/country_code.json"), "r") as f:
             country_codes = json.load(f)
 
         return country_codes[selected_country]
+    
+    def select_function_sidebar(self):
+        OPTIONS = ["요일별 인기 동영상 업로드 비율", "시간대별 인기 동영상 업로드 비율", "Option 3"]
+        selected_option = st.sidebar.selectbox("분석 방식", OPTIONS, index=None, placeholder="분석 방식을 선택해주세요.")
+        return selected_option
 
+    def confirm_function_button(self):
+        return st.sidebar.button("분석 실행하기", use_container_width=True)
+    
     def generate_wordcloud_button(self):
-        return st.sidebar.button("워드클라우드 생성")
+        return st.sidebar.button("워드클라우드 생성", use_container_width=True)
+    
+    def result_by_function(self, function_code, data):
+        if function_code == "요일별 인기 동영상 업로드 비율":
+            return st.bar_chart(data, use_container_width=True)
+        elif function_code == "시간대별 인기 동영상 업로드 비율":
+            return st.bar_chart(data, use_container_width=True)
+        elif function_code == "":
+            pass
 
 class RankingView:
 
@@ -26,6 +48,7 @@ class RankingView:
         return [input_df.loc[i:i+rows-1, :] for i in range(0, len(input_df), rows)]
 
     def display_ranking(self, ranking_df) -> None:
+        st.title("유튜브 트렌드 대시보드")
         top_menu = st.columns(3)
         with top_menu[0]:
             sort = st.radio("정렬하기", options=["Yes", "No"], horizontal=1, index=1)
@@ -48,7 +71,7 @@ class RankingView:
         bottom_menu = st.columns((4, 1, 1))
 
         with bottom_menu[2]:
-            batch_size = st.selectbox("총 페이지", options=[25, 50, 100])
+            batch_size = st.selectbox("갯수", options=[25, 50, 100])
 
         with bottom_menu[1]:
             total_pages = (len(ranking_df) // batch_size)
@@ -65,4 +88,4 @@ class RankingView:
 class AnalysisView:
     
     def display_wordcloud(self, wordcloud):
-        st.image(wordcloud, width=500, caption='인기 동영상 제목 워드클라우드')
+        st.image(wordcloud, caption='인기 동영상 제목 워드클라우드')
