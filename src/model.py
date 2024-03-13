@@ -29,14 +29,3 @@ class RankingModel:
     def get_ranking_df(self):
         return self.ranking_df
 
-
-class AnalysisModel:
-
-    def __init__(self):
-        self.ranking_df = None
-
-    def set_ranking_df(self, ranking_df):
-        self.ranking_df = ranking_df
-
-    def get_ranking_df(self):
-        return self.ranking_df
