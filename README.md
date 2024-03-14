@@ -1,11 +1,12 @@
 # 유튜브 트렌드 대시보드
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=round)](https://makeapullrequest.com)
-> 이 프로젝트는 YouTube 인기 동영상 트렌드와 동영상 댓글을 분석하기 위한 웹 애플리케이션을 제공합니다. YouTube Data API v3를 활용하여 다양한 국가의 인기 동영상 순위를 가져와 업로드 패턴, 시청자의 참여도, 동영상 댓글의 감정 분석에 대한 인사이트를 제공합니다. Python으로 구축된 이 애플리케이션은 데이터 조작을 위한 Pandas, 댓글 감정 분석을 위해 사전 학습된 모델(matthewburke/korean_sentiment), 웹 인터페이스를 위한 Streamlit 등의 라이브러리를 활용합니다.
+[![Python](https://img.shields.io/badge/Python-071D49?logo=Python&logoColor=white)](https://www.python.org/)
+[![OpenAI](https://img.shields.io/badge/OpenAI-00A3E0?logo=OpenAI&logoColor=white)](https://openai.com/)
 
-![youtube-trend-dashboard](https://github.com/madEffort/youtube-trend-dashboard/assets/158125247/94104198-0f7c-49d2-8c99-7c37bdb1824b)
+이 웹 애플리케이션은 YouTube의 인기 동영상 트렌드와 댓글을 분석 및 프로파일링 하는 데 사용됩니다. 사용자는 높은 조회수를 얻을 수 있는 주제나 적절한 업로드 시기 등과 관련된 인사이트를 얻을 수 있습니다. 이를 위해 YouTube Data API v3를 활용하여 다양한 국가에서의 인기 동영상 순위를 가져오고, 업로드 패턴, 시청자 참여도, 그리고 동영상 댓글의 감정 분석 등의 기능을 제공합니다.
 
-
+이 애플리케이션은 Python으로 개발되었으며, 데이터 조작을 위해 Pandas를 사용하고, 댓글 감정 분석을 위해 사전 학습된 모델(matthewburke/korean_sentiment)을 활용합니다. 또한, 웹 인터페이스를 제공하기 위해 Streamlit 등의 라이브러리를 활용합니다.
 
 ## 기능
 - **국가 선택:** 사용자는 국가를 선택하여 해당 지역의 인기 YouTube 동영상의 목록을 볼 수 있습니다.
@@ -43,14 +44,13 @@ streamlit run main.py
 
 ## 사용된 기술
 - **Python:** 프로젝트의 핵심 프로그래밍 언어
-- **Streamlit:** 대화형 웹 애플리케이션을 만드는데 사용
+- **Streamlit:** 웹 애플리케이션을 만드는데 사용
 - **Pandas:** 데이터 조작 및 분석에 사용
 - **transformers/pipeline:** 사전 학습된 모델(matthewburke/korean_sentiment)을 활용하여 댓글을 긍정 또는 부정으로 분류하는데 사용
 - **YouTube Data API v3:** 인기 동영상 데이터 및 댓글을 가져오는데 사용
 - **Matplotlib 및 WordCloud:** 시각화 생성에 사용
 
 이 프로젝트는 모델-뷰-컨트롤러(MVC) 아키텍처 디자인 패턴에 따라 구조화되었습니다.
-
 
 ## 정보
 
