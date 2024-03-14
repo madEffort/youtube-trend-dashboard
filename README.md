@@ -5,7 +5,7 @@
 [![OpenAI](https://img.shields.io/badge/OpenAI-00A3E0?logo=OpenAI&logoColor=white)](https://openai.com/)
 [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2FmadEffort%2Fyoutube-trend-dashboard&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com)
 
-이 웹 애플리케이션은 YouTube의 인기 동영상 트렌드와 댓글을 분석 하는 데 사용됩니다. 사용자는 높은 조회수를 얻을 수 있는 주제나 적절한 업로드 시기 등과 관련된 인사이트를 얻을 수 있습니다. 이를 위해 YouTube Data API v3를 활용하여 다양한 국가에서의 인기 동영상 순위를 가져오고, 업로드 패턴, 시청자 참여도, 그리고 동영상 댓글의 감정 분석 등의 기능을 제공합니다.
+이 웹 애플리케이션은 YouTube의 인기 동영상 트렌드와 댓글을 분석 하는 데 사용됩니다. 사용자는 높은 조회수를 얻을 수 있는 주제나 적절한 업로드 시기 등과 관련된 인사이트를 얻을 수 있습니다. 이를 위해 YouTube Data API v3를 활용하여 다양한 국가에서의 인기 동영상 순위를 가져오고, 업로드 패턴 그리고 동영상 댓글의 감정 분석 등의 기능을 제공합니다.
 
 이 애플리케이션은 Python으로 개발되었으며, 데이터 조작을 위해 Pandas를 사용하고, 댓글 감정 분석을 위해 사전 학습된 모델(matthewburke/korean_sentiment)을 활용합니다. 또한, 웹 인터페이스를 제공하기 위해 Streamlit 등의 라이브러리를 활용합니다.
 
