@@ -71,8 +71,12 @@ def main():
             video_id = id_pattern.search(input_video_id).group()
             if video_id is not None:
                 with st_lottie_spinner(loading_wait(), key="loading"):
+                    analysis, comments = ranking_controller.load_comments_analysis(video_id)
                     ranking_view.video_comments_analysis(
-                        ranking_controller.load_comments_analysis(video_id)
+                        analysis, comments
+                    )
+                    ranking_view.display_analysis_slang_beta(
+                        ranking_controller.analysis_slang_beta(video_id)
                     )
             else:
                 input_view.input_invalid()

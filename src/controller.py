@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import pandas as pd
 from datetime import datetime
@@ -8,6 +9,7 @@ from decouple import config
 from googleapiclient.discovery import build
 from openai import OpenAI
 from transformers import pipeline
+from youtube_transcript_api import YouTubeTranscriptApi
 
 # 요일 이름을 한국어로 매핑하는 딕셔너리
 DAY_NAME_MAP = {
@@ -78,13 +80,13 @@ class InputController:
     def function_upload_status_by_weekday(self, ranking_df):
         # 요일별 업로드 현황을 계산하고 챗봇에게 문장 생성 요청
         weekday_data = {
-            "A.월요일": ranking_df["업로드요일"].value_counts().get("월요일", 0),
-            "B.화요일": ranking_df["업로드요일"].value_counts().get("화요일", 0),
-            "C.수요일": ranking_df["업로드요일"].value_counts().get("수요일", 0),
-            "D.목요일": ranking_df["업로드요일"].value_counts().get("목요일", 0),
-            "E.금요일": ranking_df["업로드요일"].value_counts().get("금요일", 0),
-            "F.토요일": ranking_df["업로드요일"].value_counts().get("토요일", 0),
-            "G.일요일": ranking_df["업로드요일"].value_counts().get("일요일", 0),
+            "월요일": ranking_df["업로드요일"].value_counts().get("월요일", 0),
+            "화요일": ranking_df["업로드요일"].value_counts().get("화요일", 0),
+            "수요일": ranking_df["업로드요일"].value_counts().get("수요일", 0),
+            "목요일": ranking_df["업로드요일"].value_counts().get("목요일", 0),
+            "금요일": ranking_df["업로드요일"].value_counts().get("금요일", 0),
+            "토요일": ranking_df["업로드요일"].value_counts().get("토요일", 0),
+            "일요일": ranking_df["업로드요일"].value_counts().get("일요일", 0),
         }
         weekday_df = pd.DataFrame([weekday_data])
         weekday_df = weekday_df.T
@@ -151,14 +153,17 @@ class InputController:
     ):
         select_video_1 = ranking_df[ranking_df["동영상ID"] == video_id_1]
         select_video_2 = ranking_df[ranking_df["동영상ID"] == video_id_2]
-        print(select_video_1)
-        print(select_video_2)
+
         videos = [
             self.preprocess_compare_video(select_video_1),
             self.preprocess_compare_video(select_video_2),
         ]
-        video_1_result = ranking_controller.load_comments_analysis(video_id_1)
-        video_2_result = ranking_controller.load_comments_analysis(video_id_2)
+        video_1_result, video1_comments = ranking_controller.load_comments_analysis(
+            video_id_1
+        )
+        video_2_result, video2_comments = ranking_controller.load_comments_analysis(
+            video_id_2
+        )
         comments_result1 = [
             video_1_result[1][0] * 2,
             video_1_result[1][1] * 2,
@@ -168,22 +173,28 @@ class InputController:
             video_2_result[1][1] * 2,
         ]  # 두번째 비디오의 댓글 긍정 반응과 부정 반응 결과
         self.input_view.display_compare_results(
-            videos, comments_result1, comments_result2
+            videos,
+            (comments_result1, video1_comments),
+            (comments_result2, video2_comments),
         )
 
     def preprocess_compare_video(self, video):
         return {
             "채널명": video["채널명"].iloc[0],
             "제목": video["제목"].iloc[0],
-            "태그": video["태그"].iloc[0],
+            "태그": (
+                video["태그"].iloc[0]
+                if len(video["태그"].iloc[0])
+                else "사용한 태그가 없습니다."
+            ),
             "카테고리": video["카테고리"].iloc[0],
             "업로드날짜": datetime.fromisoformat(
                 str(video["업로드날짜"].iloc[0])
             ).strftime("%Y. %m. %d."),
             "업로드요일": video["업로드요일"].iloc[0],
             "조회수": video["조회수"].iloc[0],
-            "좋아요수": video["좋아요수"].iloc[0],
-            "댓글수": video["댓글수"].iloc[0],
+            "좋아요 수": video["좋아요수"].iloc[0],
+            "댓글 수": video["댓글수"].iloc[0],
             "동영상링크": "https://www.youtube.com/watch?v={0}".format(
                 video["동영상ID"].iloc[0]
             ),
@@ -294,19 +305,57 @@ class RankingController:
             item["snippet"]["topLevelComment"]["snippet"]["textOriginal"]
             for item in response["items"]
         ]
+
+        analysis, positive_comments, negative_comments = self.sentiment_analysis(comments)
+
+        return (video_id, analysis), (positive_comments, negative_comments)
+
+    def sentiment_analysis(self, comments):
+
+        positive_comments = []
+        negative_comments = []
         analysis = [0, 0]
         for comment in comments:
-            if self.sentiment_analysis(comment) == "positive":
+            # 한국어 감정 분석 모델을 사용하여 댓글의 감정 분석 수행
+            preds = self.classifier(comment[0:512], return_all_scores=True)
+            is_positive = preds[0][1]["score"] > 0.5
+            if is_positive:
                 analysis[0] += 1
-            elif self.sentiment_analysis(comment) == "negative":
+                if len(positive_comments) < 5:
+                    positive_comments.append(comment)
+            else:
                 analysis[1] += 1
-        return (video_id, analysis)
+                if len(negative_comments) < 5:
+                    negative_comments.append(comment)
+        return analysis, positive_comments, negative_comments
 
-    def sentiment_analysis(self, comment):
-        # 한국어 감정 분석 모델을 사용하여 댓글의 감정 분석 수행
-        preds = self.classifier(comment[0:512], return_all_scores=True)
-        is_positive = preds[0][1]["score"] > 0.5
-        if is_positive:
-            return "positive"
-        else:
-            return "negative"
+    def analysis_slang_beta(self, video_id):
+        warning = 0
+        srt = YouTubeTranscriptApi.get_transcript(video_id, languages=["ko", "en"])
+        
+        with open(os.path.abspath(
+                os.path.join(os.path.dirname(__file__), "..", "data", "slang.txt")
+            ), 'r', encoding='utf-8') as f:
+            lines = f.read().splitlines()
+        
+        slang = set(lines)
+        
+        with open(
+            os.path.abspath(
+                os.path.join(os.path.dirname(__file__), "..", "data", "subtitle.txt")
+            ),
+            "w",
+            encoding="utf-8",
+        ) as f:
+            for data in srt:
+                f.write(f"{data['text']}\n")
+                
+        with open( os.path.abspath(
+                os.path.join(os.path.dirname(__file__), "..", "data", "subtitle.txt")
+            ), "r", encoding="utf-8") as f:
+            pattern = "|".join(slang)
+            for data in f.readlines():
+                if re.search(pattern, data, re.IGNORECASE):
+                    warning += 1
+
+        return warning

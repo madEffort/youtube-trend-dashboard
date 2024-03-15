@@ -3,6 +3,8 @@ import json
 import streamlit as st
 from matplotlib import rc
 
+from streamlit_echarts import st_echarts
+
 # 한글 폰트 설정
 rc("font", family="AppleGothic")
 
@@ -70,27 +72,83 @@ class InputView:
 
     # 워드클라우드 및 챗봇 응답 표시
     def display_wordcloud(self, wordcloud, response):
-        st.image(wordcloud, caption="인기 동영상 제목 워드클라우드")
+        st.markdown(
+            "<h1 style='text-align: center;'>인기 있는 주제와 키워드</h1>",
+            unsafe_allow_html=True,
+        )
+        st.divider()
+        st.image(wordcloud, caption="현재 유튜브에서 인기있는 주제")
         st.markdown(response)
 
     # 분석 결과 표시
     def result_by_function(self, function_code, data):
         if function_code == "요일별 인기 동영상 업로드 비율":
-            return (
-                st.write(function_code),
-                st.bar_chart(data[0], use_container_width=True),
-                st.markdown(data[1]),
+            chart = self.generate_weekday_chart(data[0])
+            st.markdown(
+                f"<h1 style='text-align: center;'>{function_code}</h1>",
+                unsafe_allow_html=True,
             )
+            st.divider()
+            st_echarts(options=chart, height="500px")
+            st.markdown(data[1])
         elif function_code == "시간대별 인기 동영상 업로드 비율":
-            return (
-                st.write(function_code),
-                st.bar_chart(data[0], use_container_width=True),
-                st.markdown(data[1]),
+            chart = self.generate_time_chart(data[0])
+            st.markdown(
+                f"<h1 style='text-align: center;'>{function_code}</h1>",
+                unsafe_allow_html=True,
             )
+            st.divider()
+            st_echarts(options=chart, height="500px")
+            st.markdown(data[1])
         elif function_code == "인기 동영상 평균 태그 갯수":
-            return st.subheader(
-                f"TOP 200 인기 동영상들은 평균 {data}개의 태그를 사용합니다."
+            st.markdown(
+                f"<h3 style='text-align: center;'>TOP 200 인기 동영상들은 평균 {data}개의 태그를 사용합니다.</h3>",
+                unsafe_allow_html=True,
             )
+
+    # 시간대별 인기 동영상 업로드 비율 차트 생성 함수
+    def generate_time_chart(self, data):
+        chart = {
+            "tooltip": {"trigger": "axis", "axisPointer": {"type": "shadow"}},
+            "xAxis": {
+                "type": "category",
+                "data": [str(i) + "시" for i in range(len(data))],
+            },
+            "yAxis": {"type": "value"},
+            "series": [
+                {
+                    "data": [int(data.iloc[i]) for i in range(len(data))],
+                    "type": "bar",
+                }
+            ],
+        }
+        return chart
+
+    # 요일별 인기 동영상 업로드 비율 차트 생성 함수
+    def generate_weekday_chart(self, data):
+        chart = {
+            "tooltip": {"trigger": "axis", "axisPointer": {"type": "shadow"}},
+            "xAxis": {
+                "type": "category",
+                "data": [
+                    "월요일",
+                    "화요일",
+                    "수요일",
+                    "목요일",
+                    "금요일",
+                    "토요일",
+                    "일요일",
+                ],
+            },
+            "yAxis": {"type": "value"},
+            "series": [
+                {
+                    "data": [int(data.iloc[i]["업로드 수"]) for i in range(len(data))],
+                    "type": "bar",
+                }
+            ],
+        }
+        return chart
 
     # 동영상 댓글 분석 입력 UI 표시
     def input_analysis_video(self):
@@ -133,10 +191,17 @@ class InputView:
 
     def display_compare_results(self, data, comments_result1, comments_result2):
 
+        video1_comments_analysis = comments_result1[0]
+        video1_comments = comments_result1[1]
+
+        video2_comments_analysis = comments_result2[0]
+        video2_comments = comments_result2[1]
+
         st.markdown(
             "<h1 style='text-align: center;'>유튜브 동영상 비교</h1>",
             unsafe_allow_html=True,
         )
+        st.divider()
         col1, col2 = st.columns(2)
 
         col1.subheader(data[0]["채널명"])
@@ -147,18 +212,18 @@ class InputView:
         )
         col1.video(data[0]["동영상링크"])
         col1.markdown("> {0}".format(data[0]["제목"]))
-
         col1.markdown(
-            "```좋아요 {0:,}개 / 댓글 {1:,}개```".format(
-                data[0]["좋아요수"], data[0]["댓글수"]
+            "```좋아요 {0:,}개 / 댓글 {1:,}개 / {2}```".format(
+                data[0]["좋아요 수"], data[0]["댓글 수"], data[0]["카테고리"]
             )
         )
+        video1_tags = col1.expander("사용한 태그")
+        video1_tags.write(data[0]["태그"])
         col1.markdown(
             "댓글은 긍정적인 반응 {0}%, 부정적인 반응 {1}% 입니다.".format(
-                comments_result1[0], comments_result1[1]
+                video1_comments_analysis[0], video1_comments_analysis[1]
             )
         )
-
 
         col2.subheader(data[1]["채널명"])
         col2.markdown(
@@ -168,21 +233,83 @@ class InputView:
         )
         col2.video(data[1]["동영상링크"])
         col2.markdown("> {0}".format(data[1]["제목"]))
-
         col2.markdown(
-            "```좋아요 {0:,}개 / 댓글 {1:,}개```".format(
-                data[1]["좋아요수"], data[1]["댓글수"]
+            "```좋아요 {0:,}개 / 댓글 {1:,}개 / {2}```".format(
+                data[1]["좋아요 수"], data[1]["댓글 수"], data[1]["카테고리"]
             )
         )
+
+        video2_tags = col2.expander("사용한 태그")
+        video2_tags.write(data[1]["태그"])
         col2.markdown(
             "댓글은 긍정적인 반응 {0}%, 부정적인 반응 {1}% 입니다.".format(
-                comments_result2[0], comments_result2[1]
+                video2_comments_analysis[0], video2_comments_analysis[1]
             )
         )
+
+        st.divider()
+
+        chart_col1, chart_col2 = st.columns(2)
+        with chart_col1:
+            compare_likes = self.generate_pie_chart(data, option="좋아요 수")
+            st_echarts(options=compare_likes)
+
+        with chart_col2:
+            compare_comments = self.generate_pie_chart(data, option="댓글 수")
+            st_echarts(options=compare_comments)
+
+        st.divider()
+
+        st.subheader(f"{data[0]['제목']} | 댓글 여론")
+        video1_positive_comments = st.expander("긍정적인 댓글")
+        video1_positive_comments.write(video1_comments[0])
+        video1_negative_comments = st.expander("부정적인 댓글")
+        video1_negative_comments.write(video1_comments[1])
+
+        st.divider()
+
+        st.subheader(f"{data[1]['제목']} | 댓글 여론")
+        video2_positive_comments = st.expander("긍정적인 댓글")
+        video2_positive_comments.write(video2_comments[0])
+        video2_negative_comments = st.expander("부정적인 댓글")
+        video2_negative_comments.write(video2_comments[1])
+
+    def generate_pie_chart(self, data, option):
+        chart = {
+            "title": {
+                "text": f"{option} 비교 차트",
+                "tooltip": {"trigger": "item"},
+                "left": "center",
+            },
+            "tooltip": {
+                "trigger": "item",
+                "formatter": "{a} <br/>{b}: {c} ({d}%)",
+            },
+            "series": [
+                {
+                    "name": f"{option}",
+                    "type": "pie",
+                    "radius": "50%",
+                    "data": [
+                        {"value": int(data[0][option]), "name": f"{data[0]['채널명']}"},
+                        {"value": int(data[1][option]), "name": f"{data[1]['채널명']}"},
+                    ],
+                    "emphasis": {
+                        "itemStyle": {
+                            "shadowBlur": 10,
+                            "shadowOffsetX": 0,
+                            "shadowColor": "rgba(0, 0, 0, 0.5)",
+                        }
+                    },
+                }
+            ],
+        }
+        return chart
 
     # 국가 변경 후 유튜브 비교 시 동영상 ID를 그대로 뒀을 때 에러 발생 할 경우 경고
     def input_country_change_error(self):
         return st.warning("동영상ID를 지우고 다시 입력해주세요.")
+
 
 class RankingView:
 
@@ -244,14 +371,41 @@ class RankingView:
         pagination.dataframe(data=pages[current_page - 1], use_container_width=True)
 
     # 동영상 댓글 분석 결과 표시
-    def video_comments_analysis(self, data):
+    def video_comments_analysis(self, data, comments):
         positive = data[1][0]
         negative = data[1][1]
-        return (
-            st.video(f"https://www.youtube.com/watch?v={data[0]}"),
-            st.write("해당 동영상의 댓글의 반응은"),
-            st.subheader(f"긍정적인 반응😃: {2 * positive}%"),
-            st.subheader(f"부정적인 반응🤬: {2 * negative}%"),
-            st.write("의 반응을 보입니다."),
+        positive_comments = comments[0]
+        negative_comments = comments[1]
+        st.markdown(
+            "<h1 style='text-align: center;'>유튜브 댓글 분석</h1>",
+            unsafe_allow_html=True,
         )
+        st.divider()
+        st.video(f"https://www.youtube.com/watch?v={data[0]}")
+        st.write("해당 동영상의 댓글의 반응은")
+        st.subheader(f"긍정적인 반응😃: {2 * positive}%")
+        pos = st.expander("긍정적인 댓글")
+        pos.write(positive_comments)
+
+        st.subheader(f"부정적인 반응🤬: {2 * negative}%")
+        neg = st.expander("부정적인 댓글")
+        neg.write(negative_comments)
+        st.write("의 반응을 보입니다.")
+
+    def display_analysis_slang_beta(self, warning):
+        st.divider()
+        st.markdown(
+            "<h1 style='font-style: italic; color:red;'>Beta 버전</h1>",
+            unsafe_allow_html=True,
+        )
+        beta_version = st.expander("베타 버전 기능입니다.")
+        beta_version.markdown(
+            "#### **해당 동영상에서 사용된 욕설의 횟수는 {0}회입니다.**".format(warning)
+        )
+        if warning > 20:
+            beta_version.warning(
+                "이 동영상은 어린아이들이 시청하기에 다소 부적절할 수 있습니다."
+            )
+        else:
+            beta_version.info("이 동영상은 어린아이들이 시청하기에 적합합니다.")
 

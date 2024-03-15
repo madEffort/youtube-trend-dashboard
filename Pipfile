@@ -18,6 +18,9 @@ torchvision = "*"
 openai = "*"
 streamlit-lottie = "*"
 google-auth-oauthlib = "*"
+streamlit-echarts = "*"
+scikit-learn = "*"
+youtube-transcript-api = "*"
 
 [dev-packages]
 
