@@ -3,6 +3,7 @@
 .vscode/
 dataframe.csv
 subtitle.txt
+example.mp4
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
