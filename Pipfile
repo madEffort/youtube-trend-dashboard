@@ -12,6 +12,12 @@ pandasai = "*"
 pyyaml = "*"
 wordcloud = "*"
 textblob = "*"
+transformers = "*"
+torch = "*"
+torchvision = "*"
+openai = "*"
+streamlit-lottie = "*"
+google-auth-oauthlib = "*"
 
 [dev-packages]
 
