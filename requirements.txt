@@ -39,10 +39,10 @@ fastjsonschema==2.19.1
 filelock==3.13.1
 Flask==3.0.2
 Flask-Cors==3.0.10
-fonttools==4.49.0
+fonttools==4.50.0
 fqdn==1.5.1
 frozenlist==1.4.1
-fsspec==2024.2.0
+fsspec==2024.3.0
 gitdb==4.0.11
 GitPython==3.1.42
 google-api-core==2.17.1
@@ -105,11 +105,11 @@ notebook==7.1.1
 notebook_shim==0.2.4
 numpy==1.26.4
 oauthlib==3.2.2
-openai==1.14.0
+openai==1.14.1
 overrides==7.7.0
 packaging==23.2
 pandas==1.5.3
-pandasai==2.0.12
+pandasai==2.0.16
 pandocfilters==1.5.1
 parso==0.8.3
 partd==1.4.1
@@ -145,7 +145,7 @@ pytz==2024.1
 PyYAML==6.0.1
 pyzmq==25.1.2
 rapidfuzz==2.15.2
-referencing==0.33.0
+referencing==0.34.0
 regex==2023.12.25
 requests==2.31.0
 requests-oauthlib==1.4.0
@@ -179,6 +179,7 @@ toml==0.10.2
 tomli==2.0.1
 toolz==0.12.1
 torch==2.2.1
+torchaudio==2.2.1
 torchvision==0.17.1
 tornado==6.4
 tqdm==4.66.2

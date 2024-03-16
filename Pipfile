@@ -21,6 +21,7 @@ google-auth-oauthlib = "*"
 streamlit-echarts = "*"
 scikit-learn = "*"
 youtube-transcript-api = "*"
+torchaudio = "*"
 
 [dev-packages]
 
