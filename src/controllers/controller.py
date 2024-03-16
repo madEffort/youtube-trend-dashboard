@@ -1,5 +1,5 @@
-from analysis_options import ANALYSIS_OPTIONS
-from controller_chart import (
+from config.analysis_options import ANALYSIS_OPTIONS
+from utils.echart_generator import (
     generate_dayofweek_chart,
     generate_timebyday_chart,
     generate_pie_chart,
@@ -13,7 +13,7 @@ from decouple import config
 from openai import OpenAI
 from googleapiclient.discovery import build
 from youtube_transcript_api import YouTubeTranscriptApi
-from sentiment_analysis import SentimentAnalyzer
+from utils.sentiment_analysis import SentimentAnalyzer
 
 
 class YoutubeController:
@@ -79,7 +79,7 @@ class YoutubeController:
                     },
                     {
                         "role": "user",
-                        "content": f"이 데이터는 조회수가 급증한 유튜브 인기동영상들의 월요일부터 일요일까지 요일별로 업로드 수 현황인데 이 업로드 현황 데이터만을 바탕으로 어느 요일에 동영상을 업로드 하는게 조회수를 많이 받을 수 있는지 조언해줘. {result.to_string()}",
+                        "content": f"이 데이터는 조회수가 급증한 유튜브 인기동영상들의 월요일부터 일요일까지 요일별로 업로드 수 현황인데 이 업로드 현황 데이터만을 바탕으로 어느 요일에 동영상을 업로드 하는게 조회수를 많이 받을 수 있는지 {self.model.get_country_info()}에 해당하는 국가의 특성을 고려해서 조언하고 그렇게 분석한 이유를 설명해줘 {result.to_string()}",
                     },
                 ],
             )
@@ -90,7 +90,6 @@ class YoutubeController:
             return analysis_option, (result, gpt_message)
 
         if analysis_option == ANALYSIS_OPTIONS[1]:
-            print("시간별")
 
             youtube_dataframe = self.model.get_youtube_dataframe()
 
@@ -112,7 +111,7 @@ class YoutubeController:
                     },
                     {
                         "role": "user",
-                        "content": f"이 데이터는 유튜브 인기동영상들의 0시부터 23시까지 시간대별로 업로드 수 분포현황인데 이 분포 현황을 바탕으로 어느 시간대에 동영상을 업로드 하는게 조회수를 많이 받을 수 있는지 조언해줘. {result.to_string()}",
+                        "content": f"이 데이터는 유튜브 인기동영상들의 0시부터 23시까지 시간대별로 업로드 수 분포현황인데 이 분포 현황을 바탕으로 어느 시간대에 동영상을 업로드 하는게 조회수를 많이 받을 수 있는지 {self.model.get_country_info()}에 해당하는 국가의 특성을 고려해서 조언하고 그렇게 분석한 이유를 설명해줘. {result.to_string()}",
                     },
                 ],
             )
@@ -124,7 +123,6 @@ class YoutubeController:
             return analysis_option, (result, gpt_message)
 
         if analysis_option == ANALYSIS_OPTIONS[2]:
-            print("asd")
             youtube_dataframe = self.model.get_youtube_dataframe()
 
             result = int(youtube_dataframe["태그갯수"].mean())
@@ -190,7 +188,7 @@ class YoutubeController:
 
         with open(
             os.path.abspath(
-                os.path.join(os.path.dirname(__file__), "..", "data", "slang.txt")
+                os.path.join(os.path.dirname(__file__), "../../", "data", "slang.txt")
             ),
             "r",
             encoding="utf-8",
@@ -201,7 +199,9 @@ class YoutubeController:
 
         with open(
             os.path.abspath(
-                os.path.join(os.path.dirname(__file__), "..", "data", "subtitle.txt")
+                os.path.join(
+                    os.path.dirname(__file__), "../../", "data", "subtitle.txt"
+                )
             ),
             "w",
             encoding="utf-8",
@@ -211,7 +211,9 @@ class YoutubeController:
 
         with open(
             os.path.abspath(
-                os.path.join(os.path.dirname(__file__), "..", "data", "subtitle.txt")
+                os.path.join(
+                    os.path.dirname(__file__), "../../", "data", "subtitle.txt"
+                )
             ),
             "r",
             encoding="utf-8",

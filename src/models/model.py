@@ -15,11 +15,12 @@ DAY_NAME_MAP = {
     "Sunday": "일요일",
 }
 
+
 class YoutubeModel:
-    
+
     API_SERVICE_NAME = "youtube"
     API_VERSION = "v3"
-    
+
     def __init__(self):
         self.youtube = build(
             self.API_SERVICE_NAME,
@@ -27,6 +28,7 @@ class YoutubeModel:
             developerKey=config("YOUTUBE_API_KEY"),
         )
         self.youtube_dataframe = None
+        self.country_info = ""
 
     def fetch_popular_videos_data(self, country_code):
         # 국가 코드에 따라 유튜브에서 인기 동영상 데이터를 가져오는 로직 구현
@@ -77,16 +79,18 @@ class YoutubeModel:
         ranking_df["태그"] = ranking_df["태그"].apply(
             lambda x: tuple(x) if isinstance(x, list) else x
         )
-        
+
         ranking_df.to_csv(
             os.path.abspath(
-                os.path.join(os.path.dirname(__file__), "..", "data", "dataframe.csv")
+                os.path.join(
+                    os.path.dirname(__file__), "../../", "data", "dataframe.csv"
+                )
             )
         )
         with open(
             os.path.abspath(
                 os.path.join(
-                    os.path.dirname(__file__), "..", "data", "category_code.json"
+                    os.path.dirname(__file__), "../../", "data", "category_code.json"
                 )
             ),
             "r",
@@ -95,20 +99,18 @@ class YoutubeModel:
         ranking_df["카테고리"] = ranking_df["카테고리"].map(category_mapping)
         ranking_df["랭킹"] = range(0, len(ranking_df))
         ranking_df = ranking_df.set_index("랭킹")
-        
-        
+
         self.set_youtube_dataframe(ranking_df)
+        self.set_country_info(country_code)
 
     def set_youtube_dataframe(self, youtube_dataframe):
         self.youtube_dataframe = youtube_dataframe
-    
+
     def get_youtube_dataframe(self):
         return self.youtube_dataframe
-    
-    def analyze_video_comments(self, video_id):
-        # 동영상 ID에 따라 댓글을 분석하는 로직 구현
-        pass
 
-    def compare_videos(self, video_id_a, video_id_b):
-        # 두 동영상을 비교하는 로직 구현
-        pass
+    def set_country_info(self, country_info):
+        self.country_info = country_info
+
+    def get_country_info(self):
+        return self.country_info

@@ -1,9 +1,9 @@
 import re
 import streamlit as st
-from country_code import COUNTRIES
-from analysis_options import ANALYSIS_OPTIONS
-from country_code import country_to_country_code
-from loading import loading_wait
+from config.country_code import COUNTRIES
+from config.analysis_options import ANALYSIS_OPTIONS
+from config.country_code import country_to_country_code
+from utils.loading import loading_wait
 
 
 from streamlit_echarts import st_echarts
@@ -51,23 +51,25 @@ def display_sidebar(controller):
     video_id_pattern = re.compile("[A-Za-z0-9_-]{11}")
 
     if comments_analysis_col2.button("분석", use_container_width=True):
-        comments_analysis_video_id = video_id_pattern.search(
-            comments_analysis_video_id
-        ).group()
-        if comments_analysis_video_id is not None:
-            with st_lottie_spinner(loading_wait(), key="loading"):
-                result, positive_comments, negative_comments, video_id = (
-                    controller.analyze_comments(comments_analysis_video_id)
-                )
-                display_comments_analysis(
-                    result, positive_comments, negative_comments, video_id
-                )
-                # 베타 버전 욕설 감지 추가
-                warning = controller.analyze_slang_beta(comments_analysis_video_id)
-                display_slang_beta_version_function(warning)
-
-        else:
-            pass  # 유효하지 않음 처리
+        try:
+            comments_analysis_video_id = video_id_pattern.search(
+                comments_analysis_video_id
+            ).group()
+            if comments_analysis_video_id is not None:
+                with st_lottie_spinner(loading_wait(), key="loading"):
+                    result, positive_comments, negative_comments, video_id = (
+                        controller.analyze_comments(comments_analysis_video_id)
+                    )
+                    display_comments_analysis(
+                        result, positive_comments, negative_comments, video_id
+                    )
+                    # 베타 버전 욕설 감지 추가
+                    warning = controller.analyze_slang_beta(comments_analysis_video_id)
+                    display_slang_beta_version_function(warning)
+            else:
+                st.sidebar.warning("유효한 동영상ID를 입력해주세요.")
+        except:
+            st.sidebar.warning("유효한 동영상ID를 입력해주세요.")
 
     st.sidebar.title("유튜브 비교")
     comparison_col1, comparison_col2, comparison_col3 = st.sidebar.columns((8, 2, 8))
@@ -89,33 +91,37 @@ def display_sidebar(controller):
     )
 
     if st.sidebar.button("비교하기", use_container_width=True):
-
-        comparison_video_id1 = video_id_pattern.search(
-            comparison_video_id1_input
-        ).group()
-        comparison_video_id2 = video_id_pattern.search(
-            comparison_video_id2_input
-        ).group()
-        if comparison_video_id1 is not None and comparison_video_id2 is not None:
-            with st_lottie_spinner(loading_wait(), key="loading"):
-                (
-                    result,
-                    video1_comments_result,
-                    video2_comments_result,
-                    chart1,
-                    chart2,
-                ) = controller.compare_youtube_videos(
-                    comparison_video_id1, comparison_video_id2
-                )
-                display_youtube_comparison(
-                    result,
-                    video1_comments_result,
-                    video2_comments_result,
-                    chart1,
-                    chart2,
-                )
-        else:
-            pass  # 예외처리
+        try:
+            comparison_video_id1 = video_id_pattern.search(
+                comparison_video_id1_input
+            ).group()
+            comparison_video_id2 = video_id_pattern.search(
+                comparison_video_id2_input
+            ).group()
+            if comparison_video_id1 is not None and comparison_video_id2 is not None:
+                with st_lottie_spinner(loading_wait(), key="loading"):
+                    (
+                        result,
+                        video1_comments_result,
+                        video2_comments_result,
+                        chart1,
+                        chart2,
+                    ) = controller.compare_youtube_videos(
+                        comparison_video_id1, comparison_video_id2
+                    )
+                    display_youtube_comparison(
+                        result,
+                        video1_comments_result,
+                        video2_comments_result,
+                        chart1,
+                        chart2,
+                    )
+            else:
+                st.sidebar.warning("유효한 동영상ID를 입력해주세요.")
+        except IndexError:
+            st.warning("동영상ID를 지우고 다시 입력해주세요.")
+        except:
+            st.sidebar.warning("유효한 동영상ID를 입력해주세요.")
 
 
 def display_youtube_ranking_board(result):

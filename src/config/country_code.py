@@ -25,14 +25,15 @@ COUNTRIES = [
     "남아프리카 공화국",
 ]
 
+
 def country_to_country_code(country):
     with open(
-            os.path.abspath(
-                os.path.join(
-                    os.path.dirname(__file__), "..", "data", "country_code.json"
-                )
-            ),
-            "r",
-        ) as f:
-            country_codes = json.load(f)
+        os.path.abspath(
+            os.path.join(
+                os.path.dirname(__file__), "../../", "data", "country_code.json"
+            )
+        ),
+        "r",
+    ) as f:
+        country_codes = json.load(f)
     return country_codes[country]
