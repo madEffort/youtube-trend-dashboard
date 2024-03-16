@@ -56,11 +56,16 @@ def display_sidebar(controller):
         ).group()
         if comments_analysis_video_id is not None:
             with st_lottie_spinner(loading_wait(), key="loading"):
-                comments_analysis_result = controller.analyze_comments(
-                    comments_analysis_video_id
+                result, positive_comments, negative_comments, video_id = (
+                    controller.analyze_comments(comments_analysis_video_id)
                 )
-                display_comments_analysis(comments_analysis_result)
+                display_comments_analysis(
+                    result, positive_comments, negative_comments, video_id
+                )
                 # 베타 버전 욕설 감지 추가
+                warning = controller.analyze_slang_beta(comments_analysis_video_id)
+                display_slang_beta_version_function(warning)
+
         else:
             pass  # 유효하지 않음 처리
 
@@ -93,8 +98,21 @@ def display_sidebar(controller):
         ).group()
         if comparison_video_id1 is not None and comparison_video_id2 is not None:
             with st_lottie_spinner(loading_wait(), key="loading"):
-                controller.compare_youtube_videos(
+                (
+                    result,
+                    video1_comments_result,
+                    video2_comments_result,
+                    chart1,
+                    chart2,
+                ) = controller.compare_youtube_videos(
                     comparison_video_id1, comparison_video_id2
+                )
+                display_youtube_comparison(
+                    result,
+                    video1_comments_result,
+                    video2_comments_result,
+                    chart1,
+                    chart2,
                 )
         else:
             pass  # 예외처리
@@ -181,13 +199,125 @@ def display_youtube_wordcloud(result):
     st.markdown(result[1])
 
 
-def display_comments_analysis(result):
-    pass
+def display_comments_analysis(result, positive_comments, negative_comments, video_id):
+    positive_result = result[0]
+    negative_result = result[1]
+    st.markdown(
+        "<h1 style='text-align: center;'>유튜브 댓글 분석</h1>",
+        unsafe_allow_html=True,
+    )
+    st.divider()
+    st.video(f"https://www.youtube.com/watch?v={video_id}")
+    st.write("해당 동영상의 댓글의 반응은")
+    st.subheader(f"긍정적인 반응😃: {2 * positive_result}%")
+    positive = st.expander("긍정적인 댓글")
+    positive.write(positive_comments)
+
+    st.subheader(f"부정적인 반응🤬: {2 * negative_result}%")
+    negative = st.expander("부정적인 댓글")
+    negative.write(negative_comments)
+    st.write("의 반응을 보입니다.")
 
 
-def display_beta_version_function(result):
-    pass
+def display_slang_beta_version_function(result):
+    st.divider()
+    st.markdown(
+        "<h1 style='font-style: italic; color:red;'>Beta 버전</h1>",
+        unsafe_allow_html=True,
+    )
+    beta_version = st.expander("베타 버전 기능입니다.")
+    beta_version.markdown(
+        "#### **해당 동영상에서 사용된 욕설의 횟수는 {0}회입니다.**".format(result)
+    )
+    if result > 20:
+        beta_version.warning(
+            "이 동영상은 어린아이들이 시청하기에 다소 부적절할 수 있습니다."
+        )
+    else:
+        beta_version.info("이 동영상은 어린아이들이 시청하기에 적합합니다.")
 
 
-def display_youtube_comparison(comments_result):
-    pass
+def display_youtube_comparison(
+    result, video1_comments_result, video2_comments_result, chart1, chart2
+):
+
+    video1_comments_analysis = video1_comments_result[0]
+    video1_comments = video1_comments_result[1]
+
+    video2_comments_analysis = video2_comments_result[0]
+    video2_comments = video2_comments_result[1]
+
+    st.markdown(
+        "<h1 style='text-align: center;'>유튜브 동영상 비교</h1>",
+        unsafe_allow_html=True,
+    )
+    st.divider()
+    col1, col2 = st.columns(2)
+
+    col1.subheader(result[0]["채널명"])
+    col1.markdown(
+        "```조회수 {0:,}회 / {1} {2}```".format(
+            result[0]["조회수"], result[0]["업로드날짜"], result[0]["업로드요일"]
+        )
+    )
+    col1.video(result[0]["동영상링크"])
+    col1.markdown("> {0}".format(result[0]["제목"]))
+    col1.markdown(
+        "```좋아요 {0:,}개 / 댓글 {1:,}개 / {2}```".format(
+            result[0]["좋아요 수"], result[0]["댓글 수"], result[0]["카테고리"]
+        )
+    )
+    video1_tags = col1.expander("사용한 태그")
+    video1_tags.write(result[0]["태그"])
+    col1.markdown(
+        "댓글은 긍정적인 반응 {0}%, 부정적인 반응 {1}% 입니다.".format(
+            video1_comments_analysis[0], video1_comments_analysis[1]
+        )
+    )
+
+    col2.subheader(result[1]["채널명"])
+    col2.markdown(
+        "```조회수 {0:,}회 / {1} {2}```".format(
+            result[1]["조회수"], result[1]["업로드날짜"], result[1]["업로드요일"]
+        )
+    )
+    col2.video(result[1]["동영상링크"])
+    col2.markdown("> {0}".format(result[1]["제목"]))
+    col2.markdown(
+        "```좋아요 {0:,}개 / 댓글 {1:,}개 / {2}```".format(
+            result[1]["좋아요 수"], result[1]["댓글 수"], result[1]["카테고리"]
+        )
+    )
+
+    video2_tags = col2.expander("사용한 태그")
+    video2_tags.write(result[1]["태그"])
+    col2.markdown(
+        "댓글은 긍정적인 반응 {0}%, 부정적인 반응 {1}% 입니다.".format(
+            video2_comments_analysis[0], video2_comments_analysis[1]
+        )
+    )
+
+    st.divider()
+
+    comments_pie_chart_col, likes_pie_chart_col = st.columns(2)
+    with comments_pie_chart_col:
+        st_echarts(options=chart1)
+
+    with likes_pie_chart_col:
+        st_echarts(options=chart2)
+
+    st.divider()
+
+    st.subheader(f"{result[0]['제목']} | 댓글 여론")
+    video1_positive_comments = st.expander("긍정적인 댓글")
+    video1_positive_comments.write(video1_comments[0])
+    video1_negative_comments = st.expander("부정적인 댓글")
+    video1_negative_comments.write(video1_comments[1])
+
+    st.divider()
+
+    st.subheader(f"{result[1]['제목']} | 댓글 여론")
+    video2_positive_comments = st.expander("긍정적인 댓글")
+    video2_positive_comments.write(video2_comments[0])
+    video2_negative_comments = st.expander("부정적인 댓글")
+    video2_negative_comments.write(video2_comments[1])

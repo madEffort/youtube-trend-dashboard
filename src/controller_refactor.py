@@ -1,18 +1,34 @@
 from analysis_options import ANALYSIS_OPTIONS
-from controller_chart import generate_dayofweek_chart, generate_timebyday_chart
+from controller_chart import (
+    generate_dayofweek_chart,
+    generate_timebyday_chart,
+    generate_pie_chart,
+)
 import os
 import re
 import pandas as pd
+from datetime import datetime
 from wordcloud import WordCloud
 from decouple import config
 from openai import OpenAI
+from googleapiclient.discovery import build
 from youtube_transcript_api import YouTubeTranscriptApi
+from sentiment_analysis import SentimentAnalyzer
 
 
 class YoutubeController:
+
+    API_SERVICE_NAME = "youtube"
+    API_VERSION = "v3"
+
     def __init__(self, model):
         self.model = model
         self.client = OpenAI(api_key=config("OPENAI_API_KEY"))
+        self.youtube = build(
+            self.API_SERVICE_NAME,
+            self.API_VERSION,
+            developerKey=config("YOUTUBE_API_KEY"),
+        )
 
     def get_popular_videos_data(self, country_code):
         # 국가 선택에 따른 인기 동영상 데이터 요청
@@ -101,23 +117,22 @@ class YoutubeController:
                 ],
             )
             result.index = [int(hour) for hour in result.index]
-            
+
             gpt_message = response.choices[0].message.content
             result = generate_timebyday_chart(result)
-            
+
             return analysis_option, (result, gpt_message)
-        
+
         if analysis_option == ANALYSIS_OPTIONS[2]:
             print("asd")
             youtube_dataframe = self.model.get_youtube_dataframe()
-            
+
             result = int(youtube_dataframe["태그갯수"].mean())
             return analysis_option, result
-        
 
     def generate_wordcloud(self):
         youtube_dataframe = self.model.get_youtube_dataframe()
-        
+
         youtube_dataframe["words"] = youtube_dataframe["제목"].apply(
             lambda x: [item for item in str(x).split()]
         )
@@ -143,16 +158,31 @@ class YoutubeController:
         wordcloud = WordCloud(
             font_path="AppleGothic", background_color="white", width=700, height=300
         ).generate(all_words_str)
-        
+
         gpt_message = response.choices[0].message.content
         result = wordcloud.to_array()
-        
+
         return result, gpt_message
-        
 
     def analyze_comments(self, video_id):
         # 동영상 댓글 분석 요청
-        return self.model.analyze_video_comments(video_id)
+
+        request = self.youtube.commentThreads().list(
+            part="id, replies, snippet", videoId=video_id, maxResults=50
+        )
+        response = request.execute()
+        comments = [
+            item["snippet"]["topLevelComment"]["snippet"]["textOriginal"]
+            for item in response["items"]
+        ]
+
+        sentiment_analyzer = SentimentAnalyzer()
+
+        result, positive_comments, negative_comments = sentiment_analyzer.analyze(
+            comments
+        )
+
+        return result, positive_comments, negative_comments, video_id
 
     def analyze_slang_beta(self, video_id):
         warning = 0
@@ -193,7 +223,63 @@ class YoutubeController:
 
         return warning
 
-    def compare_youtube_videos(self, video_id_a, video_id_b):
-        # 두 동영상 비교 분석 요청
-        print(self.model.get_youtube_dataframe())
-        return self.model.compare_videos(video_id_a, video_id_b)
+    def compare_youtube_videos(self, video_id_1, video_id_2):
+
+        youtube_dataframe = self.model.get_youtube_dataframe()
+
+        select_video_1 = youtube_dataframe[youtube_dataframe["동영상ID"] == video_id_1]
+        select_video_2 = youtube_dataframe[youtube_dataframe["동영상ID"] == video_id_2]
+
+        def preprocess_compare_video(video):
+            return {
+                "채널명": video["채널명"].iloc[0],
+                "제목": video["제목"].iloc[0],
+                "태그": (
+                    video["태그"].iloc[0]
+                    if len(video["태그"].iloc[0])
+                    else "사용한 태그가 없습니다."
+                ),
+                "카테고리": video["카테고리"].iloc[0],
+                "업로드날짜": datetime.fromisoformat(
+                    str(video["업로드날짜"].iloc[0])
+                ).strftime("%Y. %m. %d."),
+                "업로드요일": video["업로드요일"].iloc[0],
+                "조회수": video["조회수"].iloc[0],
+                "좋아요 수": video["좋아요수"].iloc[0],
+                "댓글 수": video["댓글수"].iloc[0],
+                "동영상링크": "https://www.youtube.com/watch?v={0}".format(
+                    video["동영상ID"].iloc[0]
+                ),
+            }
+
+        videos = [
+            preprocess_compare_video(select_video_1),
+            preprocess_compare_video(select_video_2),
+        ]
+
+        video1_result, video1_positive_comments, video1_negative_comments, _ = (
+            self.analyze_comments(video_id_1)
+        )
+        video2_result, video2_positive_comments, video2_negative_comments, _ = (
+            self.analyze_comments(video_id_2)
+        )
+
+        comments_result1 = [
+            video1_result[0] * 2,
+            video1_result[1] * 2,
+        ]  # 첫번째 비디오의 댓글 긍정 반응과 부정 반응 결과
+        comments_result2 = [
+            video2_result[0] * 2,
+            video2_result[1] * 2,
+        ]  # 두번째 비디오의 댓글 긍정 반응과 부정 반응 결과
+
+        comments_pie_chart = generate_pie_chart(videos, option="댓글 수")
+        likes_pie_chart = generate_pie_chart(videos, option="좋아요 수")
+
+        return (
+            videos,
+            (comments_result1, [video1_positive_comments, video1_negative_comments]),
+            (comments_result2, [video2_positive_comments, video2_negative_comments]),
+            comments_pie_chart,
+            likes_pie_chart,
+        )
