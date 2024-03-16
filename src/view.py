@@ -35,7 +35,7 @@ class InputView:
         "남아프리카 공화국",
     ]
 
-    # 국가 선택 사이드바 표시
+    # 리팩토링 완료
     def select_country_sidebar(self):
         st.sidebar.title("유튜브 분석")
         selected_country = st.sidebar.selectbox("국가 선택", self.COUNTRIES)

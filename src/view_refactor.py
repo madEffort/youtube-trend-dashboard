@@ -1,17 +1,13 @@
 import re
 import streamlit as st
 from country_code import COUNTRIES
+from analysis_options import ANALYSIS_OPTIONS
 from country_code import country_to_country_code
 from loading import loading_wait
 
+
 from streamlit_echarts import st_echarts
 from streamlit_lottie import st_lottie_spinner
-
-ANALYSIS_OPTIONS = [
-    "요일별 인기 동영상 업로드 비율",
-    "시간대별 인기 동영상 업로드 비율",
-    "인기 동영상 평균 태그 갯수",
-]
 
 
 def display_sidebar(controller):
@@ -32,14 +28,15 @@ def display_sidebar(controller):
 
     if st.sidebar.button("분석 실행하기", use_container_width=True):
         with st_lottie_spinner(loading_wait(), key="loading"):
-            youtube_analysis_result = controller.analyze_youtube_by_option(
+            analysis_option, result = controller.analyze_youtube_by_option(
                 selected_option
             )
+            display_youtube_analysis(analysis_option, result)
 
     if st.sidebar.button("워드클라우드 생성", use_container_width=True):
         with st_lottie_spinner(loading_wait(), key="loading"):
-            youtube_analysis_wordcloud = controller.generate_wordcloud()
-            display_youtube_wordcloud(youtube_analysis_wordcloud)
+            result = controller.generate_wordcloud()
+            display_youtube_wordcloud(result)
 
     st.sidebar.title("유튜브 댓글 분석")
     comments_analysis_col1, comments_analysis_col2 = st.sidebar.columns(2)
@@ -85,34 +82,22 @@ def display_sidebar(controller):
         label_visibility="collapsed",
         value=None,
     )
-    
+
     if st.sidebar.button("비교하기", use_container_width=True):
-        
-        comparison_video_id1 = video_id_pattern.search(comparison_video_id1_input).group()
-        comparison_video_id2 = video_id_pattern.search(comparison_video_id2_input).group()
+
+        comparison_video_id1 = video_id_pattern.search(
+            comparison_video_id1_input
+        ).group()
+        comparison_video_id2 = video_id_pattern.search(
+            comparison_video_id2_input
+        ).group()
         if comparison_video_id1 is not None and comparison_video_id2 is not None:
             with st_lottie_spinner(loading_wait(), key="loading"):
-                controller.compare_youtube_videos(comparison_video_id1, comparison_video_id2)
+                controller.compare_youtube_videos(
+                    comparison_video_id1, comparison_video_id2
+                )
         else:
-            pass # 예외처리
-        
-
-    # controller.
-
-    # analysis_type = st.sidebar.selectbox("분석 방식", controller.get_analysis_options())
-
-    # # 분석 실행하기 버튼
-    # if st.sidebar.button("분석 실행하기"):
-    #     result = controller.run_analysis(country, analysis_type)
-    #     display_analysis_results(result)
-
-    # st.sidebar.title("유튜브 댓글 분석")
-    # video_id = st.sidebar.text_input("동영상ID 입력", "")
-
-    # # 댓글 분석 버튼
-    # if st.sidebar.button("댓글 분석"):
-    #     comments_result = controller.analyze_comments(video_id)
-    #     display_comments_analysis(comments_result)
+            pass  # 예외처리
 
 
 def display_youtube_ranking_board(result):
@@ -167,17 +152,33 @@ def display_youtube_ranking_board(result):
     pagination.dataframe(data=pages[current_page - 1], use_container_width=True)
 
 
-def display_youtube_analysis(display_code, result):
-    if display_code == 1:
-        pass
-    if display_code == 2:
-        pass
-    if display_code == 3:
-        pass
+def display_youtube_analysis(analysis_option, result):
+    st.markdown(
+        f"<h1 style='text-align: center;'>{analysis_option}</h1>",
+        unsafe_allow_html=True,
+    )
+    st.divider()
+    if analysis_option == ANALYSIS_OPTIONS[0]:
+        st_echarts(options=result[0], height="500px")
+        st.markdown(result[1])
+    elif analysis_option == ANALYSIS_OPTIONS[1]:
+        st_echarts(options=result[0], height="500px")
+        st.markdown(result[1])
+    elif analysis_option == ANALYSIS_OPTIONS[2]:
+        st.markdown(
+            f"<h3 style='text-align: center;'>TOP 200 인기 동영상들은 평균 {result}개의 태그를 사용합니다.</h3>",
+            unsafe_allow_html=True,
+        )
 
 
 def display_youtube_wordcloud(result):
-    pass
+    st.markdown(
+        "<h1 style='text-align: center;'>인기 있는 주제와 키워드</h1>",
+        unsafe_allow_html=True,
+    )
+    st.divider()
+    st.image(result[0], caption="현재 유튜브에서 인기있는 주제")
+    st.markdown(result[1])
 
 
 def display_comments_analysis(result):
