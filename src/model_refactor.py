@@ -26,6 +26,7 @@ class YoutubeModel:
             self.API_VERSION,
             developerKey=config("YOUTUBE_API_KEY"),
         )
+        self.youtube_dataframe = None
 
     def fetch_popular_videos_data(self, country_code):
         # 국가 코드에 따라 유튜브에서 인기 동영상 데이터를 가져오는 로직 구현
@@ -58,26 +59,26 @@ class YoutubeModel:
             next_page_token = response.get("nextPageToken")
             if not next_page_token:
                 break
-        videos_df = pd.DataFrame(videos_data)
+        ranking_df = pd.DataFrame(videos_data)
         numeric_cols = ["조회수", "좋아요수", "댓글수"]
-        videos_df[numeric_cols] = videos_df[numeric_cols].apply(
+        ranking_df[numeric_cols] = ranking_df[numeric_cols].apply(
             pd.to_numeric, errors="coerce", axis=1
         )
-        videos_df["업로드날짜"] = videos_df["업로드날짜"].apply(
+        ranking_df["업로드날짜"] = ranking_df["업로드날짜"].apply(
             lambda x: parser.parse(x)
         )
-        videos_df["업로드요일"] = videos_df["업로드날짜"].apply(
+        ranking_df["업로드요일"] = ranking_df["업로드날짜"].apply(
             lambda x: x.strftime("%A")
         )
-        videos_df["업로드요일"] = videos_df["업로드요일"].map(DAY_NAME_MAP)
-        videos_df["태그갯수"] = videos_df["태그"].apply(
+        ranking_df["업로드요일"] = ranking_df["업로드요일"].map(DAY_NAME_MAP)
+        ranking_df["태그갯수"] = ranking_df["태그"].apply(
             lambda x: 0 if x is None else len(x)
         )
-        videos_df["태그"] = videos_df["태그"].apply(
+        ranking_df["태그"] = ranking_df["태그"].apply(
             lambda x: tuple(x) if isinstance(x, list) else x
         )
         
-        videos_df.to_csv(
+        ranking_df.to_csv(
             os.path.abspath(
                 os.path.join(os.path.dirname(__file__), "..", "data", "dataframe.csv")
             )
@@ -91,11 +92,19 @@ class YoutubeModel:
             "r",
         ) as f:
             category_mapping = json.load(f)
-        videos_df["카테고리"] = videos_df["카테고리"].map(category_mapping)
-        videos_df["랭킹"] = range(0, len(videos_df))
-        videos_df = videos_df.set_index("랭킹")
-        return videos_df
+        ranking_df["카테고리"] = ranking_df["카테고리"].map(category_mapping)
+        ranking_df["랭킹"] = range(0, len(ranking_df))
+        ranking_df = ranking_df.set_index("랭킹")
+        
+        
+        self.set_youtube_dataframe(ranking_df)
 
+    def set_youtube_dataframe(self, youtube_dataframe):
+        self.youtube_dataframe = youtube_dataframe
+    
+    def get_youtube_dataframe(self):
+        return self.youtube_dataframe
+    
     def analyze_video_comments(self, video_id):
         # 동영상 ID에 따라 댓글을 분석하는 로직 구현
         pass
