@@ -6,7 +6,7 @@ authors = ["madEffort <madeffort0903@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "3.10.13"
 streamlit = "^1.32.2"
 pandas = "^2.2.1"
 google-api-python-client = "^2.122.0"
@@ -15,13 +15,13 @@ wordcloud = "^1.9.3"
 transformers = "^4.38.2"
 torch = "^2.2.1"
 torchvision = "^0.17.1"
+torchaudio = "^2.2.1"
 openai = "^1.14.1"
 streamlit-lottie = "^0.0.5"
 google-auth-oauthlib = "^1.2.0"
 streamlit-echarts = "^0.4.0"
 scikit-learn = "^1.4.1.post1"
 youtube-transcript-api = "^0.6.2"
-torchaudio = "^2.2.1"
 
 
 [build-system]
