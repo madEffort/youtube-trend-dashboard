@@ -2240,6 +2240,9 @@
             "version": "==4.66.2"
         },
         "transformers": {
+            "extras": [
+                "torch"
+            ],
             "hashes": [
                 "sha256:c4029cb9f01b3dd335e52f364c52d2b37c65b4c78e02e6a08b1919c5c928573e",
                 "sha256:c5fc7ad682b8a50a48b2a4c05d4ea2de5567adb1bdd00053619dbe5960857dd5"
