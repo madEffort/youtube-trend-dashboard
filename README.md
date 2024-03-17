@@ -73,7 +73,7 @@ git clone https://github.com/madEffort/youtube-trend-dashboard.git
 2. 가상환경 생성
 3. 필수 패키지 설치
 ```
-pip install -r requirements.txt
+poetry install
 ```
 4. `.env` 파일 생성 및 환경변수 설정
 ```
