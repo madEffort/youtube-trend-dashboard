@@ -229,4 +229,4 @@ streamlit run src/main.py
 
 ## 정보 및 라이센스
 
-MIT 라이센스를 준수하며 [LICENSE](https://github.com/madEffort/youtube-trend-dashboard/blob/main/LICENSE) 에서 자세한 정보를 확인할 수 있습니다.
+Apache-2.0 라이센스를 준수하며 [LICENSE](https://github.com/madEffort/youtube-trend-dashboard/blob/main/LICENSE) 에서 자세한 정보를 확인할 수 있습니다.
