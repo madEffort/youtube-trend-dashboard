@@ -24,9 +24,8 @@ A <a href="https://www.youtube.com/">YouTube</a> analytics tool for trend, senti
   <a href="#key-features">Key Features</a> • <a href="#how-to-use">How To Use</a> • <a href="#download">Download</a> • <a href="#credits">Credits</a> • <a href="#related">Related</a> • <a href="#license">License</a>
 </p>
 
-<p align="center">
-<img src="https://github.com/madEffort/youtube-trend-dashboard/assets/158125247/3e798f82-955e-463f-b3c2-b92f825ae8dc">	
-</p>
+![YTDashBoard](https://github.com/madEffort/youtube-trend-dashboard/assets/158125247/f9f31067-b941-44ac-a14d-cd6aa080d311)
+
 
 ## Key Features
 
